@@ -1,4 +1,11 @@
-import { Collection, Entity, ManyToMany, MikroORM, PrimaryKey, Property } from '@mikro-orm/sqlite';
+import {
+  Collection,
+  Entity,
+  ManyToMany,
+  MikroORM,
+  PrimaryKey,
+  Property,
+} from "@mikro-orm/sqlite";
 
 @Entity()
 export class Country {
@@ -8,16 +15,14 @@ export class Country {
   @Property()
   name!: string;
 
-  constructor(code: string, name: string) { 
+  constructor(code: string, name: string) {
     this.code = code;
     this.name = name;
   }
 }
 
-
 @Entity()
 class User {
-
   @PrimaryKey()
   id!: number;
 
@@ -30,16 +35,15 @@ class User {
   constructor(name: string) {
     this.name = name;
   }
-
 }
 
 let orm: MikroORM;
 
 beforeAll(async () => {
   orm = await MikroORM.init({
-    dbName: ':memory:',
+    dbName: ":memory:",
     entities: [User],
-    debug: ['query', 'query-params'],
+    debug: ["query", "query-params"],
     allowGlobalContext: true, // only for testing
   });
   await orm.schema.refreshDatabase();
@@ -49,18 +53,19 @@ afterAll(async () => {
   await orm.close(true);
 });
 
-test('basic CRUD example', async () => {
+test("basic CRUD example", async () => {
   orm.em.create(User, {
-    name: 'Foo', countries: [new Country("US", "United States")]
-   });
+    name: "Foo",
+    countries: [new Country("US", "United States")],
+  });
   await orm.em.flush();
   orm.em.clear();
 
-  const reloaded = await orm.em.findOneOrFail(User, { name: 'Foo' });
+  const reloaded = await orm.em.findOneOrFail(User, { name: "Foo" });
 
-  // not loaded, as expected
+  // countries not loaded, as expected
   expect(reloaded.countries.isInitialized()).toBe(false);
 
-  await reloaded.countries.load({dataloader: true});
-
+  // throws `TypeError: Cannot read properties of undefined (reading '__helper')`
+  await reloaded.countries.load({ dataloader: true });
 });
